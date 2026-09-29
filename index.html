@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cetak Label Undangan 103</title>
+<style>
+:root{--bg:#f5f5f4;--fg:#1c1917;--card:#fff;--bd:#d6d3d1;--ac:#0f766e}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1917;--fg:#f5f5f4;--card:#292524;--bd:#44403c;--ac:#2dd4bf}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px}
+label{display:block;font-size:12px;margin:8px 0 3px;opacity:.75}
+input,select{width:100%;padding:8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+button{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+.chk{display:flex;gap:6px;align-items:center;margin-top:10px;font-size:13px;opacity:1}.chk input{width:auto}
+.pv{overflow:hidden}
+.sheet{background:#fff;color:#000;position:relative;box-shadow:0 1px 6px #0004;transform-origin:top left}
+.lb{position:absolute;display:flex;flex-direction:column;justify-content:center;overflow:hidden;padding:1.5mm 2.5mm;line-height:1.25;word-break:break-word}
+.lb.cut{outline:.1mm dashed #f43}
+@media print{
+ @page{size:200mm 138mm;margin:0}
+ body{background:#fff}.wrap{padding:0;max-width:none}
+ .noprint{display:none!important}.pv{overflow:visible}
+ .sheet{box-shadow:none;margin:0!important;break-after:page;transform:none!important}
+ .lb.cut{outline:none}
+}
+</style><script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head><body><div class="wrap">
+<div class="noprint">
+<h1>Cetak Label Undangan 103 (12 pcs/lembar)</h1>
+<div class="card">
+<label>URL Google Sheet (Publish to web → format CSV)</label>
+<input id="url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+<div class="g">
+<div><label>Judul kolom nama</label><input id="cn" value="nama"></div>
+<div><label>Teks baris tengah</label><input id="mid" value="Di"></div>
+<div><label>Judul kolom alamat</label><input id="ca" value="alamat"></div>
+</div>
+<label class="chk" style="margin-top:6px">Baris pertama Sheet/file harus berisi judul kolom</label>
+<label>Atau import file (.csv / .xlsx / .xls)</label>
+<input id="fl" type="file" accept=".csv,.xlsx,.xls">
+<div style="display:flex;gap:8px;margin-top:8px;align-items:center"><button onclick="load()">Muat dari Google Sheet</button><span id="st" style="font-size:13px"></span></div>
+</div>
+<div class="card"><b style="font-size:13px">Tampilan teks</b>
+<div class="g">
+<div><label>Jarak antar teks (mm)</label><input id="ls" type="number" value="1" step="0.1"></div>
+<div><label>Font (pt)</label><input id="fs" type="number" value="11" step="0.5"></div>
+<div><label>Jenis font</label><select id="ff"><option>Georgia, serif</option><option>Arial, sans-serif</option><option>'Times New Roman', serif</option><option>'Courier New', monospace</option></select></div>
+<div><label>Rata</label><select id="al"><option>center</option><option>left</option></select></div>
+</div>
+<label class="chk"><input type="checkbox" id="ct" checked> Garis bantu (hanya di layar)</label>
+</div>
+<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+<span id="info" style="font-size:13px"></span><button onclick="window.print()">Cetak</button></div>
+</div>
+<div class="pv" id="pv"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let DATA=Array.from({length:12},(_,i)=>({n:'Nama Tamu '+(i+1),a:'Alamat tamu '+(i+1)}));
+// Ukuran lembar & label 103 (kunci) — mm
+const SHEET={pw:200,ph:138,lw:64,lh:32,gx:3,gy:1.5,cols:3,rows:4};
+const ids=['cn','mid','ca','ls','fs','ff','al','ct'];
+try{const u=localStorage.getItem('sheetUrl');if(u)$('url').value=u;const s=JSON.parse(localStorage.getItem('layout103')||'{}');ids.forEach(k=>{if(s[k]!=null&&k!='ct')$(k).value=s[k]})}catch(e){}
+function csv(t){const r=[];let row=[],c='',q=false;for(let i=0;i<t.length;i++){const ch=t[i];
+ if(q){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else q=false}else c+=ch}
+ else if(ch=='"')q=true;else if(ch==','){row.push(c);c=''}
+ else if(ch=='\n'||ch=='\r'){if(ch=='\r'&&t[i+1]=='\n')i++;row.push(c);r.push(row);row=[];c=''}else c+=ch}
+ if(c||row.length){row.push(c);r.push(row)}return r}
+function applyRows(r){
+ r=r.map(x=>x.map(v=>String(v==null?'':v)));
+ const hd=(r[0]||[]).map(x=>x.trim().toLowerCase()),ni=hd.indexOf($('cn').value.trim().toLowerCase()),ai=hd.indexOf($('ca').value.trim().toLowerCase());
+ if(ni<0||ai<0){$('st').textContent='Kolom "'+(ni<0?$('cn').value:$('ca').value)+'" tidak ada di judul';return}
+ DATA=r.slice(1).map(x=>({n:(x[ni]||'').trim(),a:(x[ai]||'').trim()})).filter(x=>x.n||x.a);
+ $('st').textContent='OK: '+DATA.length+' data';render();
+}
+$('fl').addEventListener('change',async e=>{
+ const f=e.target.files[0];if(!f)return;$('st').textContent='Membaca...';
+ try{
+  if(/\.csv$/i.test(f.name)){applyRows(csv(await f.text()))}
+  else{const wb=XLSX.read(await f.arrayBuffer());applyRows(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''}))}
+ }catch(err){$('st').textContent='Gagal membaca file'}
+});
+async function load(){
+ const u=$('url').value.trim();if(!u)return;
+ try{localStorage.setItem('sheetUrl',u)}catch(e){}
+ $('st').textContent='Memuat...';
+ try{const t=await (await fetch(u)).text();applyRows(csv(t))}
+ catch(e){$('st').textContent='Gagal memuat (cek link & publish CSV)'}
+}
+function render(){
+ const n=k=>parseFloat($(k).value)||0;
+ const {pw,ph,lw,lh,gx,gy,cols,rows}=SHEET;
+ try{const s={};ids.forEach(k=>s[k]=$(k).value);localStorage.setItem('layout103',JSON.stringify(s))}catch(e){}
+ const mx=(pw-(cols*lw+(cols-1)*gx))/2,my=(ph-(rows*lh+(rows-1)*gy))/2;
+ const per=cols*rows,pages=Math.max(1,Math.ceil(DATA.length/per));
+ let h='';
+ for(let p=0;p<pages;p++){
+  h+=`<div class="sheet" style="width:${pw}mm;height:${ph}mm">`;
+  for(let i=0;i<per;i++){
+   const it=DATA[p*per+i];if(!it)continue;
+   const x=mx+(i%cols)*(lw+gx),y=my+((i/cols)|0)*(lh+gy);
+   h+=`<div class="lb ${$('ct').checked?'cut':''}" style="left:${x}mm;top:${y}mm;width:${lw}mm;height:${lh}mm;gap:${n('ls')}mm;font:${n('fs')}pt ${$('ff').value};text-align:${$('al').value}"><div style="font-weight:700">${esc(it.n)}</div><div>${esc($('mid').value)}</div><div>${esc(it.a)}</div></div>`;
+  }
+  h+='</div>';
+ }
+ $('pv').innerHTML=h;
+ $('info').textContent=`${DATA.length} label • ${pages} lembar (${per}/lembar)`;
+ fit();
+}
+function fit(){
+ const w=$('pv').clientWidth,s=Math.min(1,w/(SHEET.pw*3.7795));
+ document.querySelectorAll('.sheet').forEach(e=>{e.style.transform=`scale(${s})`;e.style.marginBottom=`${(s-1)*e.offsetHeight+12}px`});
+}
+ids.forEach(k=>$(k).addEventListener('input',render));
+addEventListener('resize',fit);
+addEventListener('beforeprint',()=>document.querySelectorAll('.sheet').forEach(e=>e.style.marginBottom='0'));
+addEventListener('afterprint',fit);
+render();if($('url').value)load();
+</script></body></html>
